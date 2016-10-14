@@ -5,6 +5,7 @@ import (
 	"github.com/gocql/gocql"
 	"log"
 	"os"
+	"strings"
 )
 
 func startup( cassandraCluster string, keyspace string ) *gocql.Session {
@@ -49,4 +50,14 @@ func getRandom(session *gocql.Session) [][]string {
 		log.Fatal(err)
 	}
 	return rval
+}
+func addDefn(session *gocql.Session, words string, defn string) {
+    normalized := normalize(words)
+    insertDefn(session, normalized, defn)
+}
+func insertDefn(session *gocql.Session, words []string, defn string) {
+    if err := session.Query(`INSERT INTO defs (first, rest, defn) VALUES (?, ?, ?)`,
+        words[0], strings.Join(words[1:], " "), defn).Consistency(gocql.One).Exec(); err != nil {
+            log.Fatal(err)
+    }
 }

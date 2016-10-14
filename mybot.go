@@ -134,17 +134,15 @@ func main() {
 					}
 				}(m)
 				// NOTE: the Message object is copied, this is intentional
-			}
+            defn := strings.Split(m.Text, " := ")
+            if len(defn) > 1 {
+                go func(m Message) {
+                    addDefn(session, defn[0], defn[1])
+                    m.Text = "Ack."
+                    postMessage(ws, m)
+                }(m)
+            }
+	    }
 		}
 	}
-}
-
-func getDefinition(session *gocql.Session, words []string) string {
-	var defn string
-	thingtodefine := strings.ToLower(strings.Join(words, " "))
-	iter := session.Query("select defn from words where word = ?", thingtodefine).Consistency(gocql.One).Iter()
-	for iter.Scan(&defn) {
-		return fmt.Sprintf("'%s': %s", thingtodefine, defn)
-	}
-	return fmt.Sprintf("Sorry I don't know about '%s'", thingtodefine)
 }
